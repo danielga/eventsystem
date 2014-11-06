@@ -1,7 +1,3 @@
-if eventsystem == nil then
-	error("event could not be registered because the Event System seems to not be installed", 2)
-end
-
 local hunterhunted = {}
 hunterhunted.Name = "Hunter & Hunted"
 

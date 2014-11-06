@@ -1,10 +1,6 @@
-if not SERVER then
-	return
-end
-
-AddCSLuaFile("sh_event_system.lua")
-AddCSLuaFile("cl_event_system.lua")
-include("sh_event_system.lua")
+AddCSLuaFile("sh_core.lua")
+AddCSLuaFile("cl_core.lua")
+include("sh_core.lua")
 
 util.AddNetworkString("eventsystem_announce")
 util.AddNetworkString("eventsystem_cleanup")
@@ -62,7 +58,7 @@ function eventsystem:RemoveScheduledEvents()
 	sql.Query("DELETE * FROM eventsystem_schedules")
 end
 
-eventsystem:AddTimer("eventsystem_SchedulesChecker", 1, 0, function()
+timer.Create("eventsystem_SchedulesChecker", 1, 0, function()
 	local tbl = sql.Query("SELECT * FROM eventsystem_schedules WHERE Time <= strftime('%s', 'now')")
 	if not tbl then return end
 
@@ -78,10 +74,5 @@ eventsystem:AddTimer("eventsystem_SchedulesChecker", 1, 0, function()
 end)
 
 if not sql.TableExists("eventsystem_schedules") then
-	sql.Query("CREATE TABLE eventsystem_schedules ("
-		"Number INT NOT NULL AUTO_INCREMENT,"
-		"Type VARCHAR(255) NOT NULL,"
-		"Data TEXT NOT NULL,"
-		"Time INT NOT NULL,"
-		"PRIMARY KEY(Number))")
+	sql.Query("CREATE TABLE eventsystem_schedules (Number INT NOT NULL AUTO_INCREMENT, Type VARCHAR(255) NOT NULL, Data TEXT NOT NULL, Time INT NOT NULL, PRIMARY KEY(Number))")
 end

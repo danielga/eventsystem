@@ -1,8 +1,4 @@
-if not CLIENT then
-	return
-end
-
-include("sh_event_system.lua")
+include("sh_core.lua")
 
 local current_popups = {}
 
@@ -143,7 +139,7 @@ end
 
 function PANEL:PerformLayout(w, h)
 	surface.SetFont(messagefont)
-	local w, h = surface.GetTextSize(message)
+	local w, h = surface.GetTextSize(self.Message)
 	self:SetSize(w + 4, h + 6)
 	self.TargetX = ScrW() - self:GetWide()
 end
