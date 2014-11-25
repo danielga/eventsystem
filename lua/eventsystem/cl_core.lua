@@ -2,43 +2,6 @@ include("sh_core.lua")
 
 local current_popups = {}
 
-function eventsystem:Announce(message, duration)
-	local popup = vgui.Create("eventsystem_popup")
-	popup:SetMessage(message)
-	popup:SetDuration(duration)
-
-	table.insert(current_popups, popup)
-
-	eventsystem:Invalidate()
-end
-net.Receive("eventsystem_announce", function(len)
-	eventsystem:Announce(net.ReadString(), net.ReadInt(16))
-end)
-
-function eventsystem:CleanupClient()
-	for i = 1, #current_popups do
-		if IsValid(current_popups[i]) then
-			current_popups[i]:Remove()
-		end
-	end
-
-	current_popups = {}
-end
-net.Receive("eventsystem_cleanup", function(len)
-	eventsystem:CleanupClient()
-end)
-
-function eventsystem:PopupRemoved(panel)
-	for i = 1, #current_popups do
-		if current_popups[i] == panel then
-			table.remove(current_popups, i)
-			break
-		end
-	end
-
-	eventsystem:Invalidate()
-end
-
 local function popup_ordering(a, b)
 	if a.Duration == -1 and b.Duration == -1 then
 		return a.Start < b.Start
@@ -49,7 +12,7 @@ local function popup_ordering(a, b)
 	return a.Start + a.Duration < b.Start + b.Duration
 end
 
-function eventsystem:Invalidate()
+local function popup_invalidate()
 	table.sort(current_popups, popup_ordering)
 
 	local w = ScrW()
@@ -63,8 +26,32 @@ function eventsystem:Invalidate()
 		if curpopup.x == w then
 			curpopup.y = CurY
 		end
+
 		curpopup.TargetY = CurY
 		CurY = CurY - curpopup:GetTall() - 4
+	end
+end
+
+function eventsystem:Announce(message, duration)
+	local popup = vgui.Create("eventsystem_popup")
+	popup:SetMessage(message)
+	popup:SetDuration(duration)
+
+	table.insert(current_popups, popup)
+
+	popup_invalidate()
+end
+net.Receive("eventsystem_announce", function(len)
+	eventsystem:Announce(net.ReadString(), net.ReadInt(16))
+end)
+
+local function popup_removed(panel)
+	for i = 1, #current_popups do
+		if current_popups[i] == panel then
+			table.remove(current_popups, i)
+			popup_invalidate()
+			return
+		end
 	end
 end
 
@@ -93,6 +80,8 @@ function PANEL:Init()
 	self.TargetY = self.y
 	self.Start = RealTime()
 end
+
+PANEL.OnRemove = popup_removed
 
 function PANEL:SetMessage(message)
 	self.Message = message
@@ -128,7 +117,6 @@ function PANEL:Think()
 			self:SetPos(Approach(self.x, self.TargetX), Approach(self.y, self.TargetY))
 
 			if self.x >= self.TargetX then
-				eventsystem:PopupRemoved(self)
 				self:Remove()
 			end
 		else
@@ -161,4 +149,5 @@ function PANEL:Paint(w, h)
 	surface.SetTextPos(2, 2)
 	surface.DrawText(self.Message)
 end
+
 vgui.Register("eventsystem_popup", PANEL)

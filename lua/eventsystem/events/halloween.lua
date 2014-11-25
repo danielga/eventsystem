@@ -1,8 +1,8 @@
 local halloween = {}
-halloween.Name = "Halloween Hunt"
+
+eventsystem:Register("halloween", halloween)
 
 if CLIENT then
-	eventsystem:RegisterEvent(halloween)
 	return
 end
 
@@ -40,7 +40,7 @@ function halloween:Think()
 
 	for _, ply in pairs(player.GetAll()) do
 		if ply:GetPos():Distance(self.Gift:GetPos()) <= 75 then
-			eventsystem:EndEvent(self.Name, ply)
+			eventsystem:End(self.Name, ply)
 			break
 		end
 	end
@@ -55,12 +55,12 @@ function halloween:EndEvent(forced, ply)
 	end
 
 	if forced then
-		self:AnnounceEveryone("Halloween Gifts: The event was forced to end.", 5)
+		self:Announce("Halloween Gifts: The event was forced to end.", 5)
 		return
 	end
 
 	ply:GiveCoins(1000)
-	self:AnnounceEveryone(Format("Halloween Gifts: %s found the gift and got rewarded! Congratulations!", ply:GetName()), 15)
+	self:Announce(Format("Halloween Gifts: %s found the gift and got rewarded! Congratulations!", ply:GetName()), 15)
 end
 
 function halloween:StartEvent()
@@ -78,7 +78,5 @@ function halloween:StartEvent()
 	self.Gift:SetNotSolid(true)
 
 	hook.Add("Think", "halloween.Think", self.Think)
-	self:AnnounceEveryone("Halloween Gifts: A gift has been spawned! Find it to get a reward!", -1)
+	self:Announce("Halloween Gifts: A gift has been spawned! Find it to get a reward!", -1)
 end
-
-eventsystem:RegisterEvent(halloween)

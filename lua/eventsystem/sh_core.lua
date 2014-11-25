@@ -3,18 +3,20 @@ eventsystem = eventsystem or {}
 local events = {}
 local running_events = {}
 
-function eventsystem:StartEvent(name, ...)
-	if self:IsEventRunning(name) then
+function eventsystem:Start(name, ...)
+	assert(type(name) == "string", "bad argument #1 (string expected, got " .. type(name) .. ")")
+
+	if self:IsRunning(name) then
 		print("[Event System] The event '" .. name .. "' is already running.")
 		return false
 	end
 
-	local event = self:GetEvent(name)
-	if event == nil then
-		error("unknown event called '" .. name .. "'.", 2)
+	local event = self:Get(name)
+	if not event then
+		error("unknown event called '" .. name .. "'.")
 	end
 
-	if isfunction(event.StartEvent) then
+	if event.StartEvent then
 		local success, errmsg = pcall(event.StartEvent, event, ...)
 		if not success then
 			ErrorNoHalt(errmsg)
@@ -24,159 +26,120 @@ function eventsystem:StartEvent(name, ...)
 	table.insert(running_events, event)
 
 	if SERVER then
-		net.Start("eventsystem_startevent")
-			net.WriteString(event.Name)
+		net.Start("eventsystem_start")
+			net.WriteString(name)
 		net.Broadcast()
 	end
 
 	return true
 end
 if CLIENT then
-	net.Receive("eventsystem_startevent", function(len)
-		eventsystem:StartEvent(net.ReadString())
+	net.Receive("eventsystem_start", function(len)
+		eventsystem:Start(net.ReadString())
 	end)
 end
 
-function eventsystem:EndEvent(name, ...)
-	local forced = false
-	local args = {...}
-	if isbool(name) then
-		forced = name
-		name = args[1]
-		table.remove(args, 1)
-	end
-	
-	if not isstring(name) then
-		error("an event name to end wasn't provided (as a string)", 2)
+function eventsystem:End(first, second, ...)
+	local forced, name, skiptwo = false, first, false
+	local nametype = type(name)
+	if nametype == "boolean" then
+		forced = first
+		name = second
+		skiptwo = true
+
+		assert(type(name) == "string", "bad argument #2 (string expected, got " .. type(name) .. ")")
+	else
+		assert(nametype == "string", "bad argument #1 (string or boolean expected, got " .. nametype .. ")")
 	end
 
-	local event, key = self:GetRunningEvent(name)
-	if event == nil then
+	local event, key = self:GetRunning(name)
+	if not event then
 		print("the event '" .. name .. "' is not currently active")
 		return false
 	end
-	
-	if isfunction(event.EndEvent) then
-		local success, errmsg = pcall(event.EndEvent, event, forced, unpack(args))
+
+	if event.EndEvent then
+		local success, errmsg
+		if skiptwo then
+			success, errmsg = pcall(event.EndEvent, event, forced, ...)
+		else
+			success, errmsg = pcall(event.EndEvent, event, forced, second, ...)
+		end
+
 		if not success then
 			ErrorNoHalt(errmsg)
 		end
 	end
 
-	event:RemoveHooks()
 	table.remove(running_events, key)
 
 	if SERVER then
-		net.Start("eventsystem_endevent")
+		net.Start("eventsystem_end")
 			net.WriteBit(forced)
-			net.WriteString(event.Name)
+			net.WriteString(name)
 		net.Broadcast()
 	end
 
 	return true
 end
 if CLIENT then
-	net.Receive("eventsystem_endevent", function(len)
-		eventsystem:EndEvent(net.ReadBit(), net.ReadString())
+	net.Receive("eventsystem_end", function(len)
+		eventsystem:End(net.ReadBit() == 1, net.ReadString())
 	end)
 end
 
 local EVENT_META = {}
 
-if SERVER then
-	function EVENT_META:Announce(recipients, message, time)
-		eventsystem:Announce(recipients, message, time)
-	end
-
-	function EVENT_META:AnnounceEveryone(message, time)
-		eventsystem:AnnounceEveryone(message, time)
-	end
-else
-	function EVENT_META:Announce(message, time)
-		eventsystem:Announce(message, time)
-	end
+function EVENT_META:Announce(message, time, recipients)
+	eventsystem:Announce(message, time, recipients)
 end
 
-function eventsystem:RegisterEvent(tbl)
-	if not isstring(tbl.Name) then
-		error("couldn't register event because table member Name wasn't a string (type was " .. type(tbl.Name) .. ")", 2)
-	end
+function eventsystem:Register(name, tbl)
+	local typename, typetbl = type(name), type(tbl)
+	assert(typename == "string", "bad argument #1 (string expected, got " .. typename .. ")")
+	assert(typetbl == "table", "bad argument #2 (table expected, got " .. typetbl .. ")")
 
-	if tbl.Name == "eventsystem" then
-		error("use of forbidden event name 'eventsystem' to register a new event", 2)
-	end
-
-	setmetatable(tbl, EVENT_META)
-	table.insert(events, tbl)
+	tbl.EventName = name
+	events[name] = setmetatable(tbl, EVENT_META)
 end
 
-function eventsystem:RemoveEvent(name)
-	for k, ev in pairs(events) do
-		if ev.Name == name then
-			self:EndEvent(true, name)
-			table.remove(events, k)
-			return true
-		end
+function eventsystem:Remove(name)
+	local event = self:Get(name)
+	if event then
+		eventsystem:End(true, name)
+		events[name] = nil
+		return true
 	end
 
 	return false
 end
 
-function eventsystem:GetEvents()
-	return events
+function eventsystem:Get(name)
+	if name then
+		return events[name]
+	else
+		return events
+	end
 end
 
-function eventsystem:GetEvent(name)
-	for _, event in pairs(events) do
-		if event.Name == name then
-			return event
+function eventsystem:GetRunning(name)
+	if name then
+		for i = 1, #running_events do
+			local event = running_events[i]
+			if event.EventName == name then
+				return event, i
+			end
 		end
+	else
+		return running_events
 	end
 end
 
-function eventsystem:GetRunningEvents()
-	return running_events
+function eventsystem:IsRunning(name)
+	return self:GetRunning(name) ~= nil
 end
 
-function eventsystem:GetRunningEvent(name)
-	for k, ev in pairs(running_events) do
-		if ev.Name == name then
-			return ev, k
-		end
-	end
-end
-
-function eventsystem:IsEventRunning(name)
-	for _, event in pairs(running_events) do
-		if event.Name == name then
-			return true
-		end
-	end
-
-	return false
-end
-
-function eventsystem:SelfDestruct()
-	MsgN("[Event System] Destroying Event System.")
-
-	for _, event in pairs(running_events) do
-		self:EndEvent(true, event.Name)
-	end
-
-	if SERVER then
-		net.Start("eventsystem_remove")
-		net.Broadcast()
-	end
-
-	eventsystem = nil
-end
-if CLIENT then
-	net.Receive("eventsystem_remove", function(len)
-		eventsystem:SelfDestruct()
-	end)
-end
-
-local files = file.Find("metastruct/eventsystem/events/*.lua", "LUA")
+local files = file.Find("eventsystem/events/*.lua", "LUA")
 for _, f in pairs(files) do
 	if SERVER then
 		AddCSLuaFile("events/" .. f)

@@ -1,21 +1,20 @@
 local hideseek = {}
-hideseek.Name = "Hide & Seek"
+
+eventsystem:Register("hide_and_seek", hideseek)
+
 if CLIENT then
-	eventsystem:RegisterEvent(hideseek)
 	return
 end
 
-function hunterhunted:EndEvent(forced)
+function hideseek:EndEvent(forced)
 	if forced then
-		self:AnnounceEveryone("The Hide & Seek event was forced to end.", 5)
+		self:Announce("The Hide & Seek event was forced to end.", 5)
 		return
 	end
 
 	
 end
 
-function hunterhunted:StartEvent()
+function hideseek:StartEvent()
 
 end
-
-eventsystem:RegisterEvent(hideseek)
