@@ -94,20 +94,15 @@ end
 
 local function Approach(cur, target)
     if cur < target then
-		return math.Clamp(math.ceil(cur + (math.abs(target - cur) + 1) * FrameTime()), cur, target)
+		return math.Clamp(math.ceil(cur + (target - cur + 1) * FrameTime()), cur, target)
 	elseif cur > target then
-		return math.Clamp(math.floor(cur - (math.abs(target - cur) + 1) * FrameTime()), target, cur)
+		return math.Clamp(math.floor(cur - (cur - target + 1) * FrameTime()), target, cur)
 	end
 
 	return target
 end
 
 function PANEL:Think()
-	if eventsystem == nil then
-		self:Remove()
-		return
-	end
-
 	if self.Duration == -1 or RealTime() < self.Start + self.Duration then
 		if self.x ~= self.TargetX or self.y ~= self.TargetY then
 			self:SetPos(Approach(self.x, self.TargetX), Approach(self.y, self.TargetY))
