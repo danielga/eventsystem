@@ -32,7 +32,7 @@ local function popup_invalidate()
 	end
 end
 
-function eventsystem:Announce(message, duration)
+local function popup_create(message, duration)
 	local popup = vgui.Create("eventsystem_popup")
 	popup:SetMessage(message)
 	popup:SetDuration(duration)
@@ -41,8 +41,13 @@ function eventsystem:Announce(message, duration)
 
 	popup_invalidate()
 end
+
+function eventsystem:Announce(message, duration)
+	popup_create(message, duration)
+end
+
 net.Receive("eventsystem_announce", function(len)
-	eventsystem:Announce(net.ReadString(), net.ReadInt(16))
+	popup_create(net.ReadString(), net.ReadInt(16))
 end)
 
 local function popup_removed(panel)
