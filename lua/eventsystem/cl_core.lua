@@ -4,11 +4,11 @@ local eventsystem = eventsystem
 local current_popups = {}
 
 local function popup_ordering(a, b)
-	--[[if a.Duration == 0 and b.Duration == 0 then
+	if a.Duration == 0 and b.Duration == 0 then
 		return a.Start < b.Start
 	elseif a.Duration == 0 or b.Duration == 0 then
 		return b.Duration == 0
-	end]]
+	end
 
 	return a.Start + a.Duration < b.Start + b.Duration
 end
@@ -36,10 +36,6 @@ end
 function eventsystem.Announce(message, duration)
 	assert(type(message) == "string", "bad argument #1 to 'Announce' (string expected, got " .. type(message) .. ")")
 	assert(type(duration) == "number" and duration >= 0 and duration <= 65535, "bad argument #2 to 'Announce' (number between 0 and 65535 expected, got " .. tostring(duration) .. ", " .. type(duration) .. ")")
-
-	if duration == 0 then
-		return -- no sense showing these messages right now
-	end
 
 	local popup = vgui.Create("eventsystem_popup")
 	popup:SetMessage(message)
@@ -140,7 +136,7 @@ local function Approach(cur, target)
 end
 
 function PANEL:Think()
-	if --[[self.Duration == 0 or]] RealTime() < self.Start + self.Duration then
+	if self.Duration == 0 or RealTime() < self.Start + self.Duration then
 		if self.x ~= self.TargetX or self.y ~= self.TargetY then
 			self:SetPos(Approach(self.x, self.TargetX), Approach(self.y, self.TargetY))
 		end
@@ -168,13 +164,13 @@ function PANEL:Paint(w, h)
 	surface.SetDrawColor(blue)
 	surface.DrawRect(0, 0, w, h)
 
-	--[[if self.Duration == 0 then
+	if self.Duration == 0 then
 		surface.SetDrawColor(red)
 		surface.DrawRect(3, h - 3, w - 6, 2)
-	else]]
+	else
 		surface.SetDrawColor(green)
 		surface.DrawRect(3, h - 3, w - w / self.Duration * (RealTime() - self.Start) - 6, 2)
-	--end
+	end
 
 	surface.SetTextColor(white)
 	surface.SetFont(messagefont)

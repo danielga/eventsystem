@@ -89,6 +89,5 @@ function EVENT:OnStart()
 		end
 	end
 
-	self.Message = self:Announce("Halloween Gifts: A gift has been spawned! Find it to get a reward!", 120)
-	self:AddTimer("end", 120, 1, self.End)
+	self.Message = self:Announce("Halloween Gifts: A gift has been spawned! Find it to get a reward!", 0)
 end
