@@ -4,6 +4,7 @@ include("sh_core.lua")
 
 -- fix stupid unannounce name
 
+util.AddNetworkString("eventsystem_sync")
 util.AddNetworkString("eventsystem_announce")
 util.AddNetworkString("eventsystem_unannounce")
 util.AddNetworkString("eventsystem_start")
@@ -86,7 +87,7 @@ function eventsystem.Unschedule(number)
 	end
 end
 
-timer.Create("eventsystem_SchedulesChecker", 1, 0, function()
+timer.Create("eventsystem.SchedulesHandler", 1, 0, function()
 	local tbl = sql.Query("SELECT * FROM eventsystem_schedules WHERE Time <= strftime('%s', 'now')")
 	if not tbl then
 		return
@@ -106,3 +107,16 @@ end)
 if not sql.TableExists("eventsystem_schedules") then
 	sql.Query("CREATE TABLE eventsystem_schedules (Number INT NOT NULL AUTO_INCREMENT, Type VARCHAR(255) NOT NULL, Data TEXT NOT NULL, Time INT NOT NULL, PRIMARY KEY(Number))")
 end
+
+local active_events = eventsystem.ActiveEvents
+hook.Add("PlayerInitialSpawn", "eventsystem.Synchronize", function(ply)
+	net.Start("eventsystem_sync")
+	local num = #active_events
+	net.WriteUInt(num, 16)
+	for i = 1, num do
+		local event = active_events[i]
+		net.WriteString(event:GetEventName())
+		net.WriteUInt(event:GetIdentifier(), 32)
+	end
+	net.Send(ply)
+end)

@@ -58,6 +58,13 @@ else
 	net.Receive("eventsystem_start", function(len)
 		eventsystem_Start(net.ReadString(), net.ReadUInt(32), unpack(net.ReadTable()))
 	end)
+
+	net.Receive("eventsystem_sync", function(len)
+		local num = net.ReadUInt(16)
+		for i = 1, num do
+			eventsystem_Start(net.ReadString(), net.ReadUInt(32))
+		end
+	end)
 end
 
 local function eventsystem_End(id, ...)
