@@ -211,7 +211,6 @@ function eventsystem.Register(name, tbl)
 	assert(type(name) == "string", "bad argument #1 to 'Register' (string expected, got " .. type(name) .. ")")
 	assert(type(tbl) == "table", "bad argument #2 to 'Register' (table expected, got " .. type(tbl) .. ")")
 
-	print(name, tbl)
 	tbl.EventName = name
 	events[name] = setmetatable(tbl, EVENT_META)
 end
