@@ -2,44 +2,82 @@ AddCSLuaFile("sh_core.lua")
 AddCSLuaFile("cl_core.lua")
 include("sh_core.lua")
 
+-- fix stupid unannounce name
+
 util.AddNetworkString("eventsystem_announce")
+util.AddNetworkString("eventsystem_unannounce")
 util.AddNetworkString("eventsystem_start")
 util.AddNetworkString("eventsystem_end")
 
-function eventsystem:Announce(message, duration, recipients)
+local eventsystem = eventsystem
+local current_announce = 0
+
+local ANNOUNCE_META = {}
+ANNOUNCE_META.__index = ANNOUNCE_META
+
+function ANNOUNCE_META:IsValid()
+	return self.Valid
+end
+
+function ANNOUNCE_META:Remove()
+	net.Start("eventsystem_unannounce")
+	net.WriteUInt(self.Identifier, 32)
+
+	if self.Recipients then
+		net.Send(self.Recipients)
+	else
+		net.Broadcast()
+	end
+
+	self.Valid = false
+end
+
+function eventsystem.Announce(message, duration, recipients)
+	assert(type(message) == "string", "bad argument #1 to 'Announce' (string expected, got " .. type(message) .. ")")
+	assert(type(duration) == "number" and duration >= 0 and duration <= 65535, "bad argument #2 to 'Announce' (number between 0 and 65535 expected, got " .. tostring(duration) .. ", " .. type(duration) .. ")")
+	local recipientstype = type(recipients)
+	assert(recipientstype == "nil" or recipientstype == "Player" or recipientstype == "table", "bad argument #3 to 'Announce' (nil, Player or table expected, got " .. recipientstype .. ")")
+
+	local id = current_announce
+
 	net.Start("eventsystem_announce")
-		net.WriteString(message)
-		net.WriteInt(duration, 16)
+	net.WriteString(message)
+	net.WriteUInt(duration, 16)
+	net.WriteUInt(id, 32)
 
 	if recipients then
 		net.Send(recipients)
 	else
 		net.Broadcast()
 	end
+
+	current_announce = current_announce + 1
+	if current_announce >= 4294967296 then
+		current_announce = 0
+	end
+
+	return setmetatable({Valid = true, Identifier = id, Recipients = recipients}, ANNOUNCE_META)
 end
 
---There's 2 types of events as of now: string and event. Should be self explanatory.
-function eventsystem:AddScheduled(evtype, data, time)
-	if evtype == "string" and #data >= 32672 then
-		error("scheduled code string needs to be smaller than 32672 bytes")
-	end
+function eventsystem.Schedule(event, data, time)
+	assert(event == "string" or event == "event", "bad argument #1 to 'Schedule' (string 'event' or 'string' expected, got '" .. tostring(event) .. "' of type " .. type(event) .. ")")
+	assert(type(data) == "string" and (event == "string" and #data <= 32766 or true), "bad argument #2 to 'Schedule' (string with less than 32766 bytes expected, got " .. type(data) .. ")")
 
 	local timetype = type(time)
 	if timetype == "table" then
-		if not time.year and not time.month and not time.day then
-			error("required members year, month and day for the time table given to schedule event didn't exist")
-		end
-
+		assert(time.year and time.month and time.day, "table doesn't have the required members year, month and day")
 		time = os.time(time)
 	elseif timetype ~= "number" then
-		error("can't schedule event because provided time is not a valid type (type was " .. timetype .. ")")
+		error("bad argument #3 to 'Schedule' (table or number expected, got " .. timetype .. ")")
 	end
 
-	sql.Query("INSERT INTO eventsystem_schedules (Type, Data, Time) VALUES (" .. SQLStr(evtype) .. ", " .. SQLStr(runstring) .. ", " .. time .. ")")
+	sql.Query("INSERT INTO eventsystem_schedules (Type, Data, Time) VALUES (" .. SQLStr(evtype) .. ", " .. SQLStr(data) .. ", " .. time .. ")")
 	return tonumber(sql.Query("SELECT LAST_INSERT_ID()"))
 end
 
-function eventsystem:RemoveScheduled(number)
+function eventsystem.Unschedule(number)
+	assert(number == nil or type(number) == "number", "bad argument #1 to 'Unschedule' (nil or number expected, got " .. type(number) .. ")")
+
 	if number then
 		sql.Query("DELETE FROM eventsystem_schedules WHERE Number = " .. number)
 	else
@@ -56,12 +94,12 @@ timer.Create("eventsystem_SchedulesChecker", 1, 0, function()
 
 	for _, event in pairs(tbl) do
 		if event.EventType == "event" then
-			self:Start(event.Data)
+			eventsystem.Start(event.Data)
 		else
-			RunStringEx(event.Data, "Event System scheduled RunStringEx")
+			RunStringEx(event.Data, "Event System schedule")
 		end
 
-		self:RemoveScheduled(event.Number)
+		eventsystem.Unschedule(event.Number)
 	end
 end)
 

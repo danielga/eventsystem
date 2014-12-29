@@ -1,14 +1,13 @@
-local christmas = {}
-
-eventsystem:Register("christmas", christmas)
+EVENT.Name = "Christmas Decorations"
+EVENT.Overlapable = false -- this is implied if not explicit
 
 if SERVER then
 	return
 end
 
 local ShouldDraw = true
-CreateClientConVar("christmas_lights", 1, true, false)
-cvars.AddChangeCallback("christmas_lights", function(name, old, new)
+CreateClientConVar("christmas_decorations", 1, true, false)
+cvars.AddChangeCallback("christmas_decorations", function(name, old, new)
 	local newbool = tonumber(new)
 	if newbool then
 		ShouldDraw = newbool ~= 0
@@ -35,7 +34,7 @@ local LastLightsUpdate = 0
 local Bulp, BulpHolder, Holder
 
 local math_random, HSVToColor, table_insert = math.random, HSVToColor, table.insert
-function christmas:LightsThink()
+function EVENT:LightsThink()
 	if not ShouldDraw then
 		return
 	end
@@ -71,7 +70,7 @@ local util_PixelVisible = util.PixelVisible
 local render_SetMaterial, render_StartBeam, render_AddBeam = render.SetMaterial, render.StartBeam, render.AddBeam
 local render_EndBeam, render_SetBlend, render_SetColorModulation = render.EndBeam, render.SetBlend, render.SetColorModulation
 local render_SetColorModulation, render_DrawSprite = render.SetColorModulation, render.DrawSprite
-function christmas:LightsDraw(depth, skybox)
+function EVENT:LightsDraw(depth, skybox)
 	if depth or skybox or not ShouldDraw then
 		return
 	end
@@ -256,7 +255,7 @@ local temp = {
 	{Vector(10910, -121, -15082), Vector(11201, -983, -15074)}
 }
 
-function christmas:StartEvent()
+function EVENT:OnStart()
 	Bulp = ClientsideModel("models/dav0r/hoverball.mdl")
 	Bulp:SetMaterial("models/shiny")
 	Bulp:SetModelScale(0.4, 0)
@@ -276,13 +275,12 @@ function christmas:StartEvent()
 		AddLights(temp[i][1], temp[i][2], 10, 25)
 	end
 
-	hook.Add("Think", "christmas.LightsThink", christmas.LightsThink)
-	hook.Add("PostDrawOpaqueRenderables", "christmas.LightsDraw", christmas.LightsDraw)
+	self:AddHook("Think", "christmas.LightsThink", self.LightsThink)
+	self:AddHook("PostDrawOpaqueRenderables", "christmas.LightsDraw", self.LightsDraw)
 end
 
-function christmas:EndEvent(forced)
-	hook.Remove("Think", "christmas.LightsThink")
-	hook.Remove("PostDrawOpaqueRenderables", "christmas.LightsDraw")
+function EVENT:OnEnd()
+	self:RemoveHooks()
 
 	Lights = nil
 	LightsDraw = nil
