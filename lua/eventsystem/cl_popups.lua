@@ -28,15 +28,7 @@ function PANEL:Remove()
 	self:SetDuration(0.001)
 end
 
-function PANEL:OnRemove()
-	for i = 1, #current_popups do
-		if current_popups[i] == self then
-			table.remove(current_popups, i)
-			popup_invalidate()
-			return
-		end
-	end
-end
+PANEL.OnRemove = eventsystem.OnRemove
 
 function PANEL:GetIdentifier()
 	return self.Identifier

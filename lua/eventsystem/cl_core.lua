@@ -36,6 +36,16 @@ local function popup_invalidate()
 	end
 end
 
+function eventsystem.OnRemove(panel)
+	for i = 1, #current_popups do
+		if current_popups[i] == panel then
+			table.remove(current_popups, i)
+			popup_invalidate()
+			return
+		end
+	end
+end
+
 function eventsystem.Announce(message, duration)
 	assert(type(message) == "string", "bad argument #1 to 'Announce' (string expected, got " .. type(message) .. ")")
 	assert(type(duration) == "number" and duration >= 0 and duration <= 65535, "bad argument #2 to 'Announce' (number between 0 and 65535 expected, got " .. tostring(duration) .. ", " .. type(duration) .. ")")
