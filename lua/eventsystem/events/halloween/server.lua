@@ -53,6 +53,12 @@ local positions = {
 	Vector(-15661, -3105, 14304)
 }
 
+function EVENT:CanPlyGoto(ply, ent)
+	if ent == self.Gift then
+		return false, "nice try"
+	end
+end
+
 function EVENT:OnEnd(ply)
 	if IsValid(self.Gift) then
 		self.Gift:Remove()
@@ -73,6 +79,8 @@ function EVENT:OnEnd(ply)
 end
 
 function EVENT:OnStart()
+	self:AddHook("CanPlyGoto", "CanPlyGoto", self.CanPlyGoto)
+
 	local Pos = positions[math.random(1, #positions)]
 	self.Gift = ents.Create("base_anim")
 	self.Gift:SetModel("models/props_halloween/halloween_gift.mdl")

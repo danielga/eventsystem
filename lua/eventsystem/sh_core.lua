@@ -91,6 +91,8 @@ local function eventsystem_End(id, ...)
 		end
 	end
 
+	event:RemoveHooks()
+
 	table.remove(active_events, key)
 
 	return true
