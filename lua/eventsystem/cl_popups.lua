@@ -28,7 +28,9 @@ function PANEL:Remove()
 	self:SetDuration(0.001)
 end
 
-PANEL.OnRemove = eventsystem.OnRemove
+function PANEL:OnRemove()
+	eventsystem.InvalidatePopups(self)
+end
 
 function PANEL:GetIdentifier()
 	return self.Identifier

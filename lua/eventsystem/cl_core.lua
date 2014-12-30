@@ -16,7 +16,17 @@ local function popup_ordering(a, b)
 	return a.Start + a.Duration < b.Start + b.Duration
 end
 
-local function popup_invalidate()
+function eventsystem.InvalidatePopups(panel)
+	local panelvalid = IsValid(panel)
+	local num = #current_popups
+	for i = 1, num do
+		if not IsValid(current_popups[i]) or (panelvalid and current_popups[i] == panel) then
+			table.remove(current_popups, i)
+			i = i - 1
+			num = num - 1
+		end
+	end
+
 	table.sort(current_popups, popup_ordering)
 
 	local w = ScrW()
@@ -25,7 +35,7 @@ local function popup_invalidate()
 	-- which is divided by 480, the lowest y resolution supported
 	local CurY = 0.9 * ScrH() - 20
 
-	for i = 1, #current_popups do
+	for i = 1, num do
 		local curpopup = current_popups[i]
 		if curpopup.x == w then
 			curpopup.y = CurY
@@ -33,16 +43,6 @@ local function popup_invalidate()
 
 		curpopup.TargetY = CurY
 		CurY = CurY - curpopup:GetTall() - 4
-	end
-end
-
-function eventsystem.OnRemove(panel)
-	for i = 1, #current_popups do
-		if current_popups[i] == panel then
-			table.remove(current_popups, i)
-			popup_invalidate()
-			return
-		end
 	end
 end
 
@@ -56,7 +56,7 @@ function eventsystem.Announce(message, duration)
 
 	table.insert(current_popups, popup)
 
-	popup_invalidate()
+	eventsystem.InvalidatePopups()
 
 	return popup
 end
