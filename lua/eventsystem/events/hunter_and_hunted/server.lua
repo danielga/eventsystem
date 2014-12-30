@@ -14,7 +14,7 @@ function EVENT:OnEnd()
 
 	for _, ply in pairs(player.GetAll()) do
 		if table.HasValue(self.Succeeded, ply) then
-			ply:GiveCoins(1000)
+			ply:GiveCoins(1000, "hunter and hunted event")
 			self:Announce("Hunter & Hunted: You successfully killed your quarry!", 15, ply)
 		else
 			self:Announce("Hunter & Hunted: You failed to kill your quarry!", 15, ply)

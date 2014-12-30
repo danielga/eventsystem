@@ -68,7 +68,7 @@ function EVENT:OnEnd(ply)
 		return
 	end
 
-	ply:GiveCoins(1000)
+	ply:GiveCoins(1000, "halloween gifts event")
 	self:Announce(Format("Halloween Gifts: %s found the gift and got rewarded! Congratulations!", ply:GetName()), 15)
 end
 
