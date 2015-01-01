@@ -96,10 +96,10 @@ function eventsystem.Unschedule(number)
 	assert(number == nil or type(number) == "number", "bad argument #1 to 'Unschedule' (nil or number expected, got " .. type(number) .. ")")
 
 	if number then
-		sql.Query("DELETE FROM 'eventsystem_schedules' WHERE 'Number' = " .. number)
+		sql.Query("DELETE FROM 'eventsystem_schedules' WHERE Number = " .. number)
 	else
 		MsgN("[Event System] Removing all scheduled events.")
-		sql.Query("DELETE * FROM 'eventsystem_schedules'")
+		sql.Query("DELETE FROM 'eventsystem_schedules'")
 	end
 end
 
