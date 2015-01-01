@@ -124,7 +124,7 @@ hook.Add("Think", "eventsystem.SchedulesHandler", function()
 			RunStringEx(event.Data, "Event System schedule")
 		end
 
-		eventsystem.Unschedule(event.Number)
+		eventsystem.Unschedule(tonumber(event.Number))
 	end
 end)
 

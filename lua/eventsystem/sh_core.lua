@@ -8,7 +8,6 @@ include("sh_eventmeta.lua")
 local eventsystem = eventsystem
 local events = eventsystem.Events
 local active_events = eventsystem.ActiveEvents
-local EVENT_META = eventsystem.EVENT_META
 
 local function eventsystem_Start(name, id, ...)
 	if eventsystem.GetActive(id) then
@@ -24,7 +23,7 @@ local function eventsystem_Start(name, id, ...)
 		return
 	end
 
-	event = setmetatable(table.Copy(event), EVENT_META)
+	event = eventsystem.Wrap(table.Copy(event))
 	event.Identifier = id
 	event.Start = CurTime()
 	event.Hooks = {}

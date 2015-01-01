@@ -1,6 +1,4 @@
-eventsystem.EVENT_META = {}
-
-local EVENT_META = eventsystem.EVENT_META
+local EVENT_META = {}
 EVENT_META.__index = EVENT_META
 
 if SERVER then
@@ -104,4 +102,8 @@ function EVENT_META:RemoveTimers()
 	end
 
 	self.Timers = {}
+end
+
+function eventsystem.Wrap(tbl)
+	return setmetatable(tbl, EVENT_META)
 end
