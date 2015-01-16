@@ -1,9 +1,0 @@
-"AddonInfo"
-{
-        "name"        "EventSystem"
-        "version"     "0.1"
-        "author_name" "MetaMan"
-        "author_url"  "http://danielga.bitbucket.org/eventsystem"
-        "info"        "Facilitates the creation of events."
-        "override"    "0"
-}
