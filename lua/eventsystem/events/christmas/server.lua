@@ -53,9 +53,21 @@ local positions = {
 	Vector(-15661, -3105, 14304)
 }
 
+local punishment = 1
+local nope = "Ah ah ah! You didn't say the magic word!"
+
 function EVENT:CanPlyGoto(ply, ent)
 	if ent == self.Gift then
-		return false, "nice try"
+		ply.GIFT_NOPE = CurTime()
+		return false, nope
+	end
+end
+
+function EVENT:AowlTargetCommand(ply, cmd, ent)
+	if ent == self.Gift then
+		ply.GIFT_NOPE = nil
+		ply:ChatPrint(nope)
+		ply:Spawn()
 	end
 end
 
@@ -80,6 +92,7 @@ end
 
 function EVENT:OnStart()
 	self:AddHook("CanPlyGoto", "CanPlyGoto", self.CanPlyGoto)
+	self:AddHook("AowlTargetCommand", "AowlTargetCommand", self.AowlTargetCommand)
 
 	local Pos = positions[math.random(1, #positions)]
 	self.Gift = ents.Create("base_anim")
@@ -91,7 +104,7 @@ function EVENT:OnStart()
 	self.Gift:SetTrigger(true)
 
 	function self.Gift.StartTouch(me, ent)
-		if ent:IsPlayer() then
+		if ent:IsPlayer() and (ent.GIFT_NOPE or 0) + punishment < CurTime() then
 			self.Gift:Remove()
 			self.Gift = nil
 			self:End(ent)
