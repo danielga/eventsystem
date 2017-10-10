@@ -98,15 +98,21 @@ function EVENT:OnStart()
 	self.Gift = ents.Create("base_anim")
 	self.Gift:SetModel("models/props_halloween/halloween_gift.mdl")
 	self.Gift:SetPos(Pos + Vector(0, 0, 15))
+	self.Gift:PhysicsInit(SOLID_VPHYSICS)
 	self.Gift:Spawn()
-	self.Gift:GetPhysicsObject():EnableMotion(false)
 	self.Gift:SetTrigger(true)
 
-	function self.Gift.StartTouch(me, ent)
+	local po = self.Gift:GetPhysicsObject()
+	if IsValid(po) then
+		po:EnableMotion(false)
+	end
+
+	local event = self
+	function self.Gift:StartTouch(ent)
 		if ent:IsPlayer() and (ent.GIFT_NOPE or 0) + punishment < CurTime() then
-			self.Gift:Remove()
-			self.Gift = nil
-			self:End(ent)
+			self:Remove()
+			event.Gift = nil
+			event:End(ent)
 		end
 	end
 
