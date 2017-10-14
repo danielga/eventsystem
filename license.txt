@@ -1,4 +1,4 @@
-EventSystem - http://danielga.github.io/eventsystem
+EventSystem - https://danielga.github.io/eventsystem
 A Garry's Mod addon that facilitates the creation of events.
 -----------------------------------------------------------------------
 Copyright (c) 2014-2017, Daniel Almeida
