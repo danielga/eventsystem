@@ -60,7 +60,8 @@ local positions = {
 	SpecialVector(-1062, 1855, 128, "lobby", true),
 	SpecialVector(-1522, 1184, -8, "lobby", true),
 	SpecialVector(-1715, 553, -12, "lobby", true),
-	SpecialVector(-1051, 1465, 135, "lobby", true)
+	SpecialVector(-1051, 1465, 135, "lobby", true),
+	SpecialVector(-392, -491, 412, "lobby", true)
 }
 
 local punishment = 1
