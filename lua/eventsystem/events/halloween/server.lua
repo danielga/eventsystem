@@ -106,6 +106,18 @@ function EVENT:OnStart()
 	self:AddHook("AowlTargetCommand", "AowlTargetCommand", self.AowlTargetCommand)
 
 	local Pos = positions[math.random(1, #positions)]
+	
+	-- Find one that actually is in world
+	if table.shuffle then 
+		table.shuffle(positions)
+		for _,pos in next,positions do
+			if util.IsInWorld(pos) then
+				Pos = pos
+				break
+			end
+		end
+	end
+	
 	self.Gift = ents.Create("base_anim")
 	self.Gift:SetModel("models/props_halloween/halloween_gift.mdl")
 	self.Gift:SetPos(Pos + Vector(0, 0, 15))
